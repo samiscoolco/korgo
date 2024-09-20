@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"math/rand/v2"
+	"os"
 	"strconv"
+	"strings"
 )
 
 // return random int between 1-6
@@ -35,12 +37,37 @@ type item struct {
 	buyprice    int
 }
 
+func saveFile(name string, statdata []int) {
+	var sb strings.Builder
+	sb.WriteString(name)
+	sb.WriteString(" ")
+	for _, v := range statdata {
+		sb.WriteString(strconv.Itoa(v))
+		sb.WriteString(" ")
+	}
+
+	var strdata string = sb.String()
+	data := []byte(strdata)
+
+	err := os.WriteFile("save.kgo", data, 0644)
+	if err != nil {
+		fmt.Println("save unsuccessful.")
+	}
+	fmt.Println("save successful!")
+
+}
+
 func main() {
+	var input string
+
 	//player stats the weird and the wild
 	var running bool = true
 	var in_encounter bool = false
+	var hero string
 
 	// 0:hp, 1:gold, 2:trap_dodge, 3:flees, 4:shield, 5: atk, 6:armor, 7:heals, 8: kills
+	// update this whenevear ading a stat pls
+
 	var stat_names = []string{"HP", "GOLD", "ROPES", "TRAPS", "SHIELD", "ATK", "ARMOR", "HEALS", "kills"}
 	var stat_maxes = []int{20, -1, 3, 3, 1, 1, 1, 4, -1}
 	var stats = []int{20, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -54,8 +81,10 @@ func main() {
 	var heals *int = &stats[7]
 	var kills *int = &stats[8]
 
+	var stat_total int = len(stats)
+
 	var roll int = 0
-	var input string
+
 	var action string
 	var shopmode bool
 
@@ -158,28 +187,71 @@ func main() {
 	}
 
 	shopmode = true
+
+	//main menu
+mm:
+	cls()
+	fmt.Print("Welcome to KorGO\n(n)ew game, (l)oad game, (q)uit\n")
+	fmt.Print("Choice: \n")
+	fmt.Scanln(&input)
+	switch input {
+	case "l":
+		// load game
+		dat, _ := os.ReadFile("save.kgo")
+		fmt.Print(string(dat))
+		svdata := strings.Split(string(dat), " ")
+		for i, v := range svdata {
+			if i == 0 {
+				hero = v
+				continue
+			} else {
+				if i-1 < stat_total {
+					stats[i-1], _ = strconv.Atoi(v)
+				}
+
+			}
+		}
+	case "q":
+		//quit game
+		return
+	case "n":
+		fmt.Print("Who goes there?\n")
+		fmt.Print("Name: \n")
+		fmt.Scanln(&hero)
+	default:
+		//call me pathetic, call me what you will
+		goto mm
+	}
+
 	for running {
 		if shopmode {
 			//clear screen
 			cls()
 			//shop screen
-			fmt.Print("HERO HP: ", *hp, "  GOLD: ", *gold, "\n")
+			fmt.Print(hero, " HP: ", *hp, "  GOLD: ", *gold, "\n")
 			fmt.Print("You are shopping at SHOPNAME\nItems: \n")
 			for i, v := range shop_items {
 				fmt.Print(i, " - ", v.name, " ", v.desc, " ", v.buyprice, "GP\n")
 			}
 
+			//autosave
+			saveFile(hero, stats)
+
 			//input
-			fmt.Print("(0-9) buy item, (e)xplore, (i)nventory\n")
+			fmt.Print("(0-9) buy item, (e)xplore, (i)nventory, (q)uit\n")
 			fmt.Print("Choice: \n")
 			fmt.Scanln(&input)
 
 			i, err := strconv.Atoi(input)
 			if err != nil {
+				if input == "q" {
+					saveFile(hero, stats)
+					return
+				}
 				if input == "i" {
 					cls()
 					//print out inventory
-					fmt.Print("Inventory/Stats for HERO\n")
+					fmt.Print("Inventory/Stats for ", hero, "\n")
 					for i := range stats {
 						fmt.Print(stat_names[i], " - ", stats[i], "\n")
 					}
@@ -218,7 +290,7 @@ func main() {
 		} else {
 			for input != "t" && running {
 				cls()
-				fmt.Print("HERO HP: ", *hp, "  GOLD: ", *gold, "\n")
+				fmt.Print(hero, " HP: ", *hp, "  GOLD: ", *gold, "\n")
 				fmt.Print("You are exploring PLACENAME\n(c)ontinue, (t)own\nAction? \n")
 				fmt.Scanln(&input)
 				if input == "t" || input != "c" {
@@ -267,7 +339,7 @@ func main() {
 
 				for in_encounter && running {
 					cls()
-					fmt.Print("HERO HP: ", *hp, "  GOLD: ", *gold, "\n")
+					fmt.Print(hero, " HP: ", *hp, "  GOLD: ", *gold, "\n")
 					fmt.Print(current_encounter.nm, "(", current_encounter.th, current_encounter.dm, current_encounter.gp, ")\n")
 					fmt.Print("(a)ttack, (f)lee, (h)eal\n")
 					fmt.Print("Action? \n")
@@ -327,10 +399,11 @@ func main() {
 	cls()
 	fmt.Print("Your journey has come to an end.\nStats: \n")
 	//print out inventory
-	fmt.Print("HERO\n")
+	fmt.Print(hero, "\n")
 	for i := range stats {
 		fmt.Print(stat_names[i], " - ", stats[i], "\n")
 	}
 	fmt.Scanln()
 	fmt.Print("Goodbye!")
+	return
 }
