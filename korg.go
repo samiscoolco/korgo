@@ -42,17 +42,17 @@ func main() {
 
 	// 0:hp, 1:gold, 2:trap_dodge, 3:flees, 4:shield, 5: atk, 6:armor, 7:heals, 8: kills
 	var stat_names = []string{"HP", "GOLD", "ROPES", "TRAPS", "SHIELD", "ATK", "ARMOR", "HEALS", "kills"}
-	var stat_maxes = []int{20, -1, 3, 3, 2, 1, 1, 99, -1}
+	var stat_maxes = []int{20, -1, 3, 3, 1, 1, 1, 4, -1}
 	var stats = []int{20, 0, 0, 0, 0, 0, 0, 0, 0}
 	var hp *int = &stats[0]
 	var gold *int = &stats[1]
 	var escape *int = &stats[2]
 	var flees *int = &stats[3]
 	var shields *int = &stats[4]
-	var heals *int = &stats[7]
-	var kills *int = &stats[8]
 	var atk *int = &stats[5]
 	var def *int = &stats[6]
+	var heals *int = &stats[7]
+	var kills *int = &stats[8]
 
 	var roll int = 0
 	var input string
@@ -106,7 +106,7 @@ func main() {
 		},
 	}
 
-	var shop_items = [6]item{
+	var shop_items = []item{
 		item{
 			name:        "Rope",
 			desc:        "Avoid trap once",
@@ -193,7 +193,8 @@ func main() {
 				}
 			} else {
 				if *gold >= shop_items[i].buyprice {
-					if stats[i] < stat_maxes[i] {
+					if stats[shop_items[i].stat_num] < stat_maxes[shop_items[i].stat_num] {
+						fmt.Print()
 						fmt.Print("Buy ", shop_items[i].name, " for ", shop_items[i].buyprice, "GP?", "\n")
 						fmt.Print("(y)es, (n)o\n")
 						fmt.Scanln(&input)
@@ -202,7 +203,7 @@ func main() {
 							stats[shop_items[i].stat_num] += shop_items[i].stat_change
 						}
 					} else {
-						fmt.Print("You can hold no more ", stat_names[i], "!\n")
+						fmt.Print("You can hold no more ", stat_names[shop_items[i].stat_num], "!\n")
 						fmt.Print("Press Enter to Continue...\n")
 						fmt.Scanln()
 					}
@@ -281,7 +282,7 @@ func main() {
 							*kills = *kills + 1
 							in_encounter = false
 						} else {
-							fmt.Print("You missed, you are hurt for ", current_encounter.dm, "\n")
+							fmt.Print("You missed, you are hurt for ", (current_encounter.dm - *def), "\n")
 							*hp = *hp - (current_encounter.dm - *def)
 							if *hp <= 0 {
 								if *shields > 0 {
