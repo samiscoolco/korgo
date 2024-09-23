@@ -2,15 +2,34 @@ package main
 
 import (
 	"fmt"
-	"math/rand/v2"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
 )
 
+// town constants
+var prefixes = []string{"Cyr", "Kor", "Mal", "Sor", "Tal", "Lun", "Tar", "Elin", "Gon", "Fen", "Zar", "Vel", "Tor", "Dra", "Nim", "Sed", "Har"}
+var middles = []string{"mar", "lor", "thil", "nex", "dor", "wen", "ven", "kor", "zil", "var", "mel", "ril", "san", "jel", "tan", "quor"}
+var suffixes = []string{"ia", "ton", "dale", "mere", "burg", "field", "holm", "wood", "stead", "view", "crest", "haven", "brook", "ridge", "port", "cliff"}
+
+func GenerateTownName(seed int) string {
+	// Seed the random number generator
+	r := rand.New(rand.NewSource(int64(seed)))
+
+	// Randomly select parts
+	prefix := prefixes[r.Intn(len(prefixes))]
+	middle := middles[r.Intn(len(middles))]
+	suffix := suffixes[r.Intn(len(suffixes))]
+
+	// Combine parts to create the town name
+	townName := fmt.Sprintf("%s%s%s", prefix, middle, suffix)
+	return townName
+}
+
 // return random int between 1-6
 func d6() int {
-	return rand.IntN(6) + 1
+	return rand.Intn(6) + 1
 }
 
 // clear screen
@@ -68,9 +87,9 @@ func main() {
 	// 0:hp, 1:gold, 2:trap_dodge, 3:flees, 4:shield, 5: atk, 6:armor, 7:heals, 8: kills
 	// update this whenevear ading a stat pls
 
-	var stat_names = []string{"HP", "GOLD", "ROPES", "TRAPS", "SHIELD", "ATK", "ARMOR", "HEALS", "kills"}
-	var stat_maxes = []int{20, -1, 3, 3, 1, 1, 1, 4, -1}
-	var stats = []int{20, 0, 0, 0, 0, 0, 0, 0, 0}
+	var stat_names = []string{"HP", "GOLD", "ROPES", "TRAPS", "SHIELD", "ATK", "ARMOR", "HEALS", "KILLS", "PLAYER_LEVEL", "PLAYER_MAXLEVEL"}
+	var stat_maxes = []int{20, -1, 3, 3, 1, 1, 1, 4, -1, -1, -1}
+	var stats = []int{20, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1}
 	var hp *int = &stats[0]
 	var gold *int = &stats[1]
 	var escape *int = &stats[2]
@@ -80,6 +99,8 @@ func main() {
 	var def *int = &stats[6]
 	var heals *int = &stats[7]
 	var kills *int = &stats[8]
+	var player_level *int = &stats[9]
+	//var player_level_max *int = &stats[10]
 
 	var stat_total int = len(stats)
 
@@ -228,8 +249,8 @@ mm:
 			//clear screen
 			cls()
 			//shop screen
-			fmt.Print(hero, " HP: ", *hp, "  GOLD: ", *gold, "\n")
-			fmt.Print("You are shopping at SHOPNAME\nItems: \n")
+			fmt.Print(hero, " LVL ", *player_level, " HP: ", *hp, "  GOLD: ", *gold, "\n")
+			fmt.Print("You are shopping in the town of ", GenerateTownName(*player_level), "\nItems: \n")
 			for i, v := range shop_items {
 				fmt.Print(i, " - ", v.name, " ", v.desc, " ", v.buyprice, "GP\n")
 			}
@@ -238,7 +259,7 @@ mm:
 			saveFile(hero, stats)
 
 			//input
-			fmt.Print("(0-9) buy item, (e)xplore, (i)nventory, (q)uit\n")
+			fmt.Print("(0-9) buy item, (e)xplore, (i)nventory, (l)evel up, (t)ravel, (q)uit\n")
 			fmt.Print("Choice: \n")
 			fmt.Scanln(&input)
 
