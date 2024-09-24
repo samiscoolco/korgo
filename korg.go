@@ -95,8 +95,8 @@ func main() {
 	// update this whenevear ading a stat pls
 
 	var stat_names = []string{"HP", "GOLD", "ROPES", "TRAPS", "SHIELD", "ATK", "ARMOR", "HEALS", "KILLS", "PLAYER_LEVEL", "PLAYER_MAXLEVEL"}
-	var stat_maxes = []int{20, -1, 3, 3, 1, 1, 1, 4, -1, -1, -1}
-	var stats = []int{20, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1000}
+	var stat_maxes = []int{20, -1, 3, 3, 1, 1, 1, 4, -1, 5000, 5000}
+	var stats = []int{20, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1}
 	var hp *int = &stats[0]
 	var gold *int = &stats[1]
 	var escape *int = &stats[2]
@@ -220,7 +220,7 @@ func main() {
 mm:
 	cls()
 	fmt.Print("Welcome to KorGO\n(n)ew game, (l)oad game, (q)uit\n")
-	fmt.Print("Choice: \n")
+	fmt.Print("Choice? ")
 	fmt.Scanln(&input)
 	switch input {
 	case "l":
@@ -256,7 +256,7 @@ mm:
 			//clear screen
 			cls()
 			//shop screen
-			fmt.Print(hero, " LVL ", *player_level, " HP: ", *hp, "  GOLD: ", *gold, "\n")
+			fmt.Print(hero, " LVL ", *player_level_max, " HP: ", *hp, "  GOLD: ", *gold, "\n")
 			fmt.Print("You are shopping in the town of ", GenerateTownName(*player_level), "\nItems: \n")
 			for i, v := range shop_items {
 				fmt.Print(i, " - ", v.name, " ", v.desc, " ", v.buyprice, "GP\n")
@@ -267,7 +267,7 @@ mm:
 
 			//input
 			fmt.Print("(0-9) buy item, (e)xplore, (i)nventory, (l)evel up, (t)ravel, (q)uit\n")
-			fmt.Print("Choice: \n")
+			fmt.Print("Choice? ")
 			fmt.Scanln(&input)
 
 			i, err := strconv.Atoi(input)
@@ -275,18 +275,32 @@ mm:
 				switch input {
 				case "t":
 					cls()
-					fmt.Print("Where to traveler?\nTowns available at your level: ")
+					fmt.Print("Where to traveler?\nTowns available at your level: \n")
 					for i := 1; i <= *player_level_max; i++ {
 						fmt.Print(i, " - ", GenerateTownName(i), "\n")
 					}
-					fmt.Print("Choice: ")
+					fmt.Print("Choice? ")
 					fmt.Scanln(&input2)
 					town_num, cerr := strconv.Atoi(input2)
-					if cerr == nil {
+					if cerr == nil && town_num <= *player_level_max && town_num >= 1 {
 						*player_level = town_num
 					} else {
 						fmt.Print("Not a valid choice!")
 						fmt.Scanln()
+					}
+				case "l":
+					cls()
+					fmt.Print(*player_level_max*20, " kills and ", *player_level_max*50, " gold required to advance to level ", *player_level_max+1, ".\n(y)es, (n)o\nProceed?")
+					fmt.Scanln(&input2)
+					if input2 == "y" {
+						if *kills >= *player_level_max*20 && *gold >= *player_level_max*50 {
+							*gold = *gold - *player_level_max*50
+							*player_level_max = *player_level_max + 1
+						} else {
+							fmt.Print("You do not meet the requirements adventurer.\nPress any Enter to continue...\n")
+							fmt.Scanln()
+						}
+
 					}
 				case "q":
 					saveFile(hero, stats)
@@ -333,7 +347,7 @@ mm:
 			for input != "t" && running {
 				cls()
 				fmt.Print(hero, " HP: ", *hp, "  GOLD: ", *gold, "\n")
-				fmt.Print("You are exploring ", GenerateDungeonName(*player_level), "\n(c)ontinue, (t)own\nAction? \n")
+				fmt.Print("You are exploring ", GenerateDungeonName(*player_level), "\n(c)ontinue, (t)own\nChoice? ")
 				fmt.Scanln(&input)
 				if input == "t" || input != "c" {
 					if input == "t" {
@@ -356,7 +370,7 @@ mm:
 					in_encounter = false
 					if *escape > 0 {
 						fmt.Print("Use a tool to avoid the ", current_encounter.nm, "? \n(y)es,(n)o\n")
-						fmt.Print("Choice: \n")
+						fmt.Print("Choice? ")
 						fmt.Scanln(&input)
 						if input == "y" {
 							*escape = *escape - 1
@@ -384,7 +398,7 @@ mm:
 					fmt.Print(hero, " HP: ", *hp, "  GOLD: ", *gold, "\n")
 					fmt.Print(current_encounter.nm, "(", current_encounter.th, current_encounter.dm, current_encounter.gp, ")\n")
 					fmt.Print("(a)ttack, (f)lee, (h)eal\n")
-					fmt.Print("Action? \n")
+					fmt.Print("Choice? ")
 					fmt.Scanln(&action)
 					switch action {
 					case "a":
@@ -402,7 +416,7 @@ mm:
 								if *shields > 0 {
 									*shields = *shields - 1
 									fmt.Print("Your shield breaks and saves your life.\n")
-									*hp = d6()
+									*hp = 1
 								} else {
 									in_encounter = false
 									running = false
