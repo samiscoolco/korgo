@@ -9,22 +9,28 @@ import (
 )
 
 // town constants
-var prefixes = []string{"Cyr", "Kor", "Mal", "Sor", "Tal", "Lun", "Tar", "Elin", "Gon", "Fen", "Zar", "Vel", "Tor", "Dra", "Nim", "Sed", "Har"}
+var prefixes = []string{"Cyr", "Kor", "Mal", "Sor", "Tal", "Lun", "Tar", "Elin", "Gon", "Fen", "Zar", "Vel", "Tor", "Dra", "Yyz", "Jef", "Pal"}
 var middles = []string{"mar", "lor", "thil", "nex", "dor", "wen", "ven", "kor", "zil", "var", "mel", "ril", "san", "jel", "tan", "quor"}
 var suffixes = []string{"ia", "ton", "dale", "mere", "burg", "field", "holm", "wood", "stead", "view", "crest", "haven", "brook", "ridge", "port", "cliff"}
 
-func GenerateTownName(seed int) string {
-	// Seed the random number generator
-	r := rand.New(rand.NewSource(int64(seed)))
+// dungeon constants
+var suffixes_d = []string{"Dungeon", "Ravine", "Forest", "Ruins", "Portal", "Cave", "Fortress", "Castle", "Fort", "Depths", "Labyrinth", "Canyon", "Desert", "Lake", "Manor", "Woods"}
 
-	// Randomly select parts
+func GenerateTownName(seed int) string {
+	r := rand.New(rand.NewSource(int64(seed)))
 	prefix := prefixes[r.Intn(len(prefixes))]
 	middle := middles[r.Intn(len(middles))]
 	suffix := suffixes[r.Intn(len(suffixes))]
-
-	// Combine parts to create the town name
 	townName := fmt.Sprintf("%s%s%s", prefix, middle, suffix)
 	return townName
+}
+
+func GenerateDungeonName(seed int) string {
+	r := rand.New(rand.NewSource(int64(seed)))
+	prefix := prefixes[r.Intn(len(prefixes))]
+	middle := middles[r.Intn(len(middles))]
+	suffix := suffixes_d[r.Intn(len(suffixes))]
+	return fmt.Sprintf("%s%s %s", prefix, middle, suffix)
 }
 
 // return random int between 1-6
@@ -78,6 +84,7 @@ func saveFile(name string, statdata []int) {
 
 func main() {
 	var input string
+	var input2 string
 
 	//player stats the weird and the wild
 	var running bool = true
@@ -89,7 +96,7 @@ func main() {
 
 	var stat_names = []string{"HP", "GOLD", "ROPES", "TRAPS", "SHIELD", "ATK", "ARMOR", "HEALS", "KILLS", "PLAYER_LEVEL", "PLAYER_MAXLEVEL"}
 	var stat_maxes = []int{20, -1, 3, 3, 1, 1, 1, 4, -1, -1, -1}
-	var stats = []int{20, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1}
+	var stats = []int{20, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1000}
 	var hp *int = &stats[0]
 	var gold *int = &stats[1]
 	var escape *int = &stats[2]
@@ -100,7 +107,7 @@ func main() {
 	var heals *int = &stats[7]
 	var kills *int = &stats[8]
 	var player_level *int = &stats[9]
-	//var player_level_max *int = &stats[10]
+	var player_level_max *int = &stats[10]
 
 	var stat_total int = len(stats)
 
@@ -265,11 +272,26 @@ mm:
 
 			i, err := strconv.Atoi(input)
 			if err != nil {
-				if input == "q" {
+				switch input {
+				case "t":
+					cls()
+					fmt.Print("Where to traveler?\nTowns available at your level: ")
+					for i := 1; i <= *player_level_max; i++ {
+						fmt.Print(i, " - ", GenerateTownName(i), "\n")
+					}
+					fmt.Print("Choice: ")
+					fmt.Scanln(&input2)
+					town_num, cerr := strconv.Atoi(input2)
+					if cerr == nil {
+						*player_level = town_num
+					} else {
+						fmt.Print("Not a valid choice!")
+						fmt.Scanln()
+					}
+				case "q":
 					saveFile(hero, stats)
 					return
-				}
-				if input == "i" {
+				case "i":
 					cls()
 					//print out inventory
 					fmt.Print("Inventory/Stats for ", hero, "\n")
@@ -278,10 +300,9 @@ mm:
 					}
 					fmt.Print("Press Enter to Continue...\n")
 					fmt.Scanln()
-				}
-				if input == "e" {
+				case "e":
 					shopmode = false
-				} else {
+				default:
 					fmt.Print("Unknown Command\n")
 				}
 			} else {
@@ -312,7 +333,7 @@ mm:
 			for input != "t" && running {
 				cls()
 				fmt.Print(hero, " HP: ", *hp, "  GOLD: ", *gold, "\n")
-				fmt.Print("You are exploring PLACENAME\n(c)ontinue, (t)own\nAction? \n")
+				fmt.Print("You are exploring ", GenerateDungeonName(*player_level), "\n(c)ontinue, (t)own\nAction? \n")
 				fmt.Scanln(&input)
 				if input == "t" || input != "c" {
 					if input == "t" {
